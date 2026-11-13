@@ -99,7 +99,7 @@ implemented in `tz_gmc.py`.
 | 2026-11-13 | Report five host apertures; headline = SFR-weighted clumps vs host star-forming gas *outside* the clumps | Closest analogue to emission-line measurements; to be revisited once the observational host definition is known |
 | 2026-11-13 | Host comparison done at 4× | g205 is the only local tree, and it is 4× |
 | 2026-11-13 | `clumps.ipynb` is the working analysis file | Scripts superseded (see §8) |
-| 2026-11-13 | Project lives in `GitKraken/astrophysics/clumps` | Under git |
+| 2026-11-13 | Project lives in its own repo: `~/GitKraken/clumps`, remote `changhyun-cho/clumps` | Too much unrelated material in the `astrophysics` repo; history restarted there |
 
 ---
 
@@ -236,7 +236,7 @@ Kept here so they are not repeated.
       instead of 4, so the stellar curves silently vanish from
       `g205_z4_mass.png` and `g205_z4_size.png`).
 - [x] Keep the catalog, papers and audit out of the public repo (§9).
-- [ ] Decide on the host CSV, `inspect.output` and the notebook backup (§9).
+- [x] Decide on the host CSV, `inspect.output` and the notebook backup (§9): kept private.
 
 ---
 
@@ -258,16 +258,19 @@ Kept here so they are not repeated.
 
 ## 9. Repository note
 
-`changhyun-cho/astrophysics` is public.
+Repo: `~/GitKraken/clumps`, remote `changhyun-cho/clumps` (**public**).
+The clumps work started in `changhyun-cho/astrophysics` (`clumps/`, commits
+b32d0b5, 292965b, eb538f5); those old versions stay in that repo's history.
 
-**Ignored** (repo-root `.gitignore`, 2026-11-13): `clumps/gmc_catalog/`
-(unreleased catalog), `clumps/Thesan_Zoom_Clumps/` (papers, incl. the
-unpublished preprint), `clumps/student_audit.*`, `__pycache__/`.
+**Ignored** (`.gitignore`): `gmc_catalog/` files (unreleased catalog), the two
+papers in `Thesan_Zoom_Clumps/` (incl. the unpublished preprint),
+`student_audit.*`, `g205_z4_host_halo.csv` and `.units.txt`, `inspect.output`,
+`clumps_backup_2026-11-13.ipynb`, `.DS_Store`, the `tz_gmc` bytecode file.
+The rules name files individually, so a new catalog file, paper or `.pyc`
+must be added by hand. Checked 2026-11-13: no private file in any commit.
 
-**Still undecided** (currently staged): `g205_z4_host_halo.csv`,
-`g205_z4_host_halo.csv.units.txt`, `inspect.output` (derived from unreleased
-THESAN-Zoom data; `inspect.output` also has ORCD paths and run parameters) and
-`clumps_backup_2026-11-13.ipynb`.
+Cloning the repo does not give a runnable notebook: the catalog and host CSV
+have to be copied in separately.
 
 ---
 
@@ -287,5 +290,7 @@ THESAN-Zoom data; `inspect.output` also has ORCD paths and run parameters) and
   host from the tree, five apertures, per-snapshot statistics. Added the
   host-matching tests (§1b) and the rank-0 requirement; all pass for g205.
   Found the snapshot-coverage gaps. Moved the project into the git repo.
-  Started this log. Set up `.gitignore` for the private material, with
-  directory rules so new catalog files and papers are covered too.
+  Started this log. Set up `.gitignore` for the private material. Moved the
+  project into its own public repo `changhyun-cho/clumps`; verified that no
+  private file was committed and that the notebook runs there (all §1b tests
+  pass).
