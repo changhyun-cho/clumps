@@ -46,7 +46,10 @@ appearance. Our question sits between them.
 
 Full snapshots, group catalogs and trees live on MIT ORCD
 (`/orcd/data/mvogelsb/004/Thesan-Zooms/<target>/<zoom>/output`); everything
-here is derived summary data.
+here is derived summary data. Snapshots are
+`output/snapdir_<snap>/snapshot_<snap>.<chunk>.hdf5` (68 chunks for g205/z4);
+group catalogs are `output/groups_<snap>/`, the main branch is
+`output/tree.hdf5`.
 
 Resolution sets the smallest cloud: median R_eff = 29.5 / 21.6 / 13.0 pc and
 median M_gas = 6.7×10⁵ / 1.0×10⁵ / 1.3×10⁴ M⊙ at 4× / 8× / 16×.
@@ -67,11 +70,19 @@ implemented in `tz_gmc.py`.
 - **Only centrals are stored.** When the host is a satellite (g205 at snapshot
   29, a FoF bridging event) it has no clouds.
 - **`CenterPosition` is already relative to `GroupPos`.** Distance = its norm.
-  Assumed physical kpc, like `EffectiveRadius` (which is clearly physical).
+  Physical kpc: read that way, 3.6% of clouds overlap their nearest neighbour
+  (within the sum of effective radii); read as comoving kpc/h, 54% would.
 - **`SFR_yso` = `StellarMass / 3000` exactly**, i.e. 1000 × M⊙/yr. Divide by
   1000. `SFR_inst` is M⊙/yr.
 - **H and He are normalised separately from the metals**: H + He ≈ 1 + Z, so
   `1 − H − He` returns −Z. Build Z as the sum of C, N, O, Ne, Mg, Si, Fe.
+  The tree's species fractions do the same (sum 1.0002–1.014), so this is
+  how the simulation stores them, not a catalog error; the effect on Z and
+  O/H is below 1%.
+- **Oxygen is enhanced relative to solar**: O is 57% of the metal mass in
+  clouds vs 43% in the Sun, so 12+log(O/H) sits +0.09 dex above
+  8.69 + log(Z/Z⊙). Compare O/H with O/H; converting between Z and O/H with a
+  solar pattern introduces this offset.
 - **`X_Fraction_sfr` is NaN** for clouds with no star-forming cell.
 - **Group vs subhalo.** Group-level quantities (FoF) are fragile: at snapshot
   29 `GroupMass` triples and `GroupPos` jumps 59 kpc for one snapshot.
@@ -81,7 +92,13 @@ implemented in `tz_gmc.py`.
   ~5% above the seven-species sum for the same gas. Build host Z from
   `SubhaloGasMetalFractions*` so clump and host match.
 - **Particle types** (NTYPES = 7): 0 gas, 1 DM, 4 stars; 2, 3, 5, 6 empty for
-  g205 (no low-res contamination, no black holes).
+  g205 (no low-res contamination, no black holes). Type 4 is stars only: the
+  run has no `GFM_WINDS` (TNG-style wind particles) and no black holes;
+  feedback is explicit (`FM_STAR_FEEDBACK`, `FM_DISCRETE_SN`, early stellar
+  feedback, radiative transfer). `FM_AGB_WINDS` is AGB mass return, not a
+  particle type. Confirmed in g205/z4 snapshot 188 on ORCD: 5,170,761
+  type-4 particles, none with `GFM_StellarFormationTime <= 0`. The earliest
+  star formed at a = 0.0422 (z ≈ 22.7), before the first snapshot.
 
 ---
 
@@ -99,6 +116,7 @@ implemented in `tz_gmc.py`.
 | 2026-11-13 | Report five host apertures; headline = SFR-weighted clumps vs host star-forming gas *outside* the clumps | Closest analogue to emission-line measurements; to be revisited once the observational host definition is known |
 | 2026-11-13 | Host comparison done at 4× | g205 is the only local tree, and it is 4× |
 | 2026-11-13 | `clumps.ipynb` is the working analysis file | Scripts superseded (see §8) |
+| 2026-11-13 | Settle catalog questions from the data, not by asking the catalog's author | Treat `CenterPosition` as physical kpc (overlap test, §5.5); treat missing snapshots as unprocessed gaps; test the burst-window question on ORCD |
 | 2026-11-13 | Project lives in its own repo: `~/GitKraken/clumps`, remote `changhyun-cho/clumps` | Too much unrelated material in the `astrophysics` repo; history restarted there |
 
 ---
@@ -140,11 +158,23 @@ All clouds, unresolved included:
 
 - No clouds for any halo at snapshots 0–24, 46–47, 63–66, 147, 174–175.
   Snapshots 174–175 have host SFR 44–55 M⊙/yr, so they were not processed.
-- Of 155 processed snapshots, g205 has clouds in 79. Those without still have
-  ~500 star-forming cells (median). Cloud snapshots cluster near SFR peaks
-  (72% within 2 snapshots of a peak vs ~35% further away), consistent with the
-  paper running CloudPhinder on starburst windows (§2.2). **Unconfirmed.** If
-  true, every clump-host comparison samples burst phases only.
+- Of 155 processed snapshots, g205 has clouds in 79. At the others the
+  catalog holds clouds of other, small haloes only, so the host was not
+  processed there.
+- **The gaps are irregular.** Neither gas content nor burst timing predicts
+  them: 72 of the 75 snapshots without host clouds have more star-forming
+  cells than the poorest snapshot *with* clouds (28 cells); the catalog stores
+  clouds down to 4 elements. Reproducing the paper's starburst windows (local
+  SFR peak over one t_dyn = R200/V200 ≈ 100–300 Myr, > 2× the window median)
+  puts 130 of 155 processed snapshots inside a window, and host clouds appear
+  in 54% inside vs 36% outside. Snapshot 139 is itself a starburst peak
+  (43 M⊙/yr, ~4,600 star-forming cells) with no host clouds.
+- **Does it bias the result?** Snapshots with host clouds lean to higher SFR
+  (median 4.3 vs 1.4 M⊙/yr). The headline offset (star-forming clumps vs host
+  star-forming gas outside clumps) does not depend on burst phase (Spearman
+  ρ = −0.09, p = 0.43; median +0.010 dex in the burstier half, +0.023 in the
+  calmer half). The offset against *all* host gas does (ρ = +0.43,
+  p < 0.001), so that aperture is sensitive to the uneven sampling.
 
 ### 5.4 Clump vs host metallicity (g205, 4×, notebook §3–7)
 
@@ -179,7 +209,29 @@ z = 3.0–9.6.
 - Resolved clumps carry a median 47% of the host SFR, and their summed SFR
   follows host bursts with no lag beyond one snapshot (~10 Myr).
 
-### 5.5 Corrections (withdrawn statements)
+### 5.5 Audit of the calculations (2026-11-13, `audit_checks.py`)
+
+| check | result |
+|---|---|
+| snapshot → z map vs group-catalog headers (snap 0, 100) | exact |
+| tree M200c vs 200 ρ_crit(z) 4/3 π R200c³ (Planck 2015) | ratio 0.9998, all snapshots: mass, length, a and h conversions right |
+| `SFR_yso` vs `StellarMass` | exactly /3000 in all 34,311 non-zero rows |
+| Σ SFR_yso/1000 vs Σ SFR_inst per snapshot | ratio 0.55 (0.37–0.88): same order, as expected for 3 Myr vs instantaneous |
+| `CenterPosition` units | physical kpc strongly favoured (above) |
+| host "outside clumps" subtraction | never negative where defined |
+| species sums, O enhancement | see §3 |
+
+Not a bug but worth knowing: at z < 4 the host's star-forming gas
+(Z ≈ 0.33–0.34 Z⊙ mass- or SFR-weighted) is *less* enriched than its gas
+within r½ (0.42) or all its bound gas (0.39). The bound gas outside the
+star-forming phase is the more metal-rich, plausibly metal-loaded outflows.
+An emission-line host value would track the star-forming gas.
+
+Not checkable locally: the snapshot grid for runs other than g205 (assumed
+identical); exact meaning of the `HalfRad` aperture (TNG convention: within
+the stellar half-mass radius).
+
+### 5.6 Corrections (withdrawn statements)
 
 Kept here so they are not repeated.
 
@@ -196,11 +248,13 @@ Kept here so they are not repeated.
 
 ## 6. Open questions
 
-**For Zihao**
-1. Was CloudPhinder run on every snapshot for every central, or only inside
-   the starburst windows of §2.2?
-2. Why are snapshots 174–175 (and the other gaps) missing for g205z4?
-3. Is `CenterPosition` in physical kpc?
+**About the catalog** (to be settled from the data)
+1. ~~Were clouds searched for only inside starburst windows?~~ No: the gaps
+   are irregular and not explained by gas or by the paper's windows; they do
+   not bias the headline offset (§5.3).
+2. ~~Why are snapshots missing?~~ Treated as unprocessed gaps (the host forms
+   up to 55 M⊙/yr at 174–175).
+3. ~~Is `CenterPosition` physical kpc?~~ Yes, by the overlap test (§5.5).
 
 **About the observations**
 4. How do Estrada-Carpenter et al. define the host ("disk") metallicity:
@@ -224,7 +278,7 @@ Kept here so they are not repeated.
 
 ## 7. Next steps
 
-- [ ] Get answers to questions 1–3 from Zihao.
+- [x] Catalog coverage: gaps are irregular, headline offset unaffected (§5.3).
 - [ ] Read the observational papers for the host definition and clump scale
       (questions 4–5); add them to `Thesan_Zoom_Clumps/`.
 - [ ] On ORCD: run `tz_tree_catalog.py` for the other targets and save
@@ -247,6 +301,7 @@ Kept here so they are not repeated.
 | `clumps.ipynb` | **working analysis** (sections 1–8, host-matching tests in §1b) |
 | `tz_gmc.py` | catalog loader with units, redshift and derived quantities |
 | `gmc_validate.py`, `gmc_overview.png` | reproduction of Wang et al. 2025 numbers |
+| `audit_checks.py` | independent checks of units, conventions and derived quantities (§5.5) |
 | `clump_host_analysis.py`, `indep_*.png` | independent host-vs-clump analysis (superseded by the notebook) |
 | `tz_tree_catalog.py`, `tz_inspect.py`, `tz_plot.py`, `sanity.py` | tree extraction and inspection (run on ORCD) |
 | `g205_z4_host_halo.csv`, `.units.txt` | g205 main-branch tree, flattened |
@@ -293,4 +348,9 @@ have to be copied in separately.
   Started this log. Set up `.gitignore` for the private material. Moved the
   project into its own public repo `changhyun-cho/clumps`; verified that no
   private file was committed and that the notebook runs there (all §1b tests
-  pass).
+  pass). Audited all derived quantities (`audit_checks.py`, §5.5): no
+  errors found; documented the oxygen enhancement and the host's
+  star-forming gas being less enriched than its bound gas. Confirmed on ORCD
+  that particle type 4 holds stars only (no wind particles). Decided to
+  settle catalog questions from the data; the coverage gaps turned out to be
+  irregular (not starburst windows) and do not bias the headline offset.
