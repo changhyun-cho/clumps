@@ -41,7 +41,7 @@ INK, MUTED = "#1c1c1c", "#8a8a8a"
 
 
 def load():
-    h = pd.read_csv("g205_z4_host_halo.csv")
+    h = pd.read_csv(tz_gmc.host_tree_path("g205_z4"))
     h["snap"] = h["snap"].astype(int)
     h["Zhost"] = sum(h["Sub_SubhaloGasMetalFractions_%d" % i]
                      for i in range(2, 9)) / ZSUN

@@ -336,7 +336,7 @@ def make_figures(d, fid8, no8, var8):
     ax.plot(x, g.median().to_numpy(), "o-", color=C[0], ms=4, label="GMCs, 8x")
     ax.fill_between(x, g.quantile(0.16).to_numpy(), g.quantile(0.84).to_numpy(),
                     color=C[0], alpha=0.15, lw=0)
-    host = pd.read_csv("g205_z4_host_halo.csv")
+    host = pd.read_csv(tz_gmc.host_tree_path("g205_z4"))
     hm = host.phys_Sub_SubhaloGasMetallicity_Zsun > 0
     ax.plot(host.Redshift[hm], host.phys_Sub_SubhaloGasMetallicity_Zsun[hm],
             color=C[1], lw=1.4, label="g205 host galaxy, gas")

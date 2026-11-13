@@ -41,7 +41,7 @@ appearance. Our question sits between them.
 | `gmc_catalog/gmc_output_z8.hdf5` | **8×** resolution, 4 targets, z ≈ 9 → 3 (paper's fiducial for cloud properties) |
 | `gmc_catalog/gmc_output_z16.hdf5` | **16×** resolution, 2 targets, z = 3.05 → 3.46 only |
 | `gmc_catalog/gmc_out_{noESF,varSFE}z{4,8}.hdf5` | physics variants (no early stellar feedback; density-dependent SFE) |
-| `g205_z4_host_halo.csv` | main-progenitor branch of target g205 (4×) from `tree.hdf5`; the **only** host tree we have locally |
+| `host_trees/<target>_z<zoom>_host_halo.csv` | main-progenitor branch of each target from `tree.hdf5`, for all 14 fiducial runs (8 at 4×, 4 at 8×, 2 at 16×); read through `tz_gmc.host_tree_path()` |
 | `inspect.output` | structure dump of the g205 group catalogs and tree |
 
 Full snapshots, group catalogs and trees live on MIT ORCD
@@ -116,6 +116,7 @@ implemented in `tz_gmc.py`.
 | 2026-11-13 | Report five host apertures; headline = SFR-weighted clumps vs host star-forming gas *outside* the clumps | Closest analogue to emission-line measurements; to be revisited once the observational host definition is known |
 | 2026-11-13 | Host comparison done at 4× | g205 is the only local tree, and it is 4× |
 | 2026-11-13 | `clumps.ipynb` is the working analysis file | Scripts superseded (see §8) |
+| 2026-11-13 | **Default sample = clouds inside R_gal = min(2 r½,\*, 0.15 R200c)** (clumpiness paper); `clumps_all` kept for comparison; radial section uses all clouds | Removes clouds in other galaxies of the FoF group; makes the "outside clumps" host valid (§5.5b) |
 | 2026-11-13 | Settle catalog questions from the data, not by asking the catalog's author | Treat `CenterPosition` as physical kpc (overlap test, §5.5); treat missing snapshots as unprocessed gaps; test the burst-window question on ORCD |
 | 2026-11-13 | Project lives in its own repo: `~/GitKraken/clumps`, remote `changhyun-cho/clumps` | Too much unrelated material in the `astrophysics` repo; history restarted there |
 
@@ -209,6 +210,109 @@ z = 3.0–9.6.
 - Resolved clumps carry a median 47% of the host SFR, and their summed SFR
   follows host bursts with no lag beyond one snapshot (~10 Myr).
 
+### 5.5a All 14 runs (2026-11-13, notebook §1b–§8)
+
+- **Matching** (§1b): all 12 runs at 4× and 8× pass every applicable test.
+  **Both 16× runs have no target clouds**: their catalog clouds sit under one
+  other `HaloID` (2 for g137030, 1 for g500531) at every snapshot, while the
+  target is group 0 with ~0 SFR. 16× is excluded from host comparisons
+  automatically; it still enters host-independent statistics.
+- **Clouds from other galaxies in the group**: at 8×, 27–40% of matched
+  resolved clouds lie beyond 0.15 R200c (5–13% at 4×), carrying 20–37% of
+  the cloud SFR (1–16% at 4×). At g578 snapshot 176, clouds beyond 0.15 R200c
+  carry 9.3 of 10.2 M⊙/yr, exceeding the central's SFR; it is star formation
+  in another galaxy within the FoF group. **Galaxy boundary cut not yet
+  applied** (open decision, §6).
+- **Headline offset** (SF clumps − host SF gas outside clumps, per snapshot):
+  4× +0.022 [−0.025, +0.083] dex over 250 snapshots; 8× +0.035
+  [−0.075, +0.192] over 132. Per run, all medians lie within ±0.1 dex; only
+  g33206 is negative (−0.058 at 4×, −0.063 at 8×; 8 and 10 snapshots).
+- **Dilution fraction** (≤ −0.1 dex vs host): 19% of 4× star-forming clumps
+  but a per-snapshot median of 2%. The clump-weighted number is dominated by
+  g39 (9,893 of 14,921 SF clumps); quote per-snapshot or per-run numbers.
+- **Same target, 4× vs 8×**: within-snapshot clump scatter roughly doubles
+  at 8× (16–84 width 0.08–0.13 → 0.15–0.22 dex) as clouds get ~6× less
+  massive; the headline offset changes little except g10304 (+0.008 →
+  +0.097).
+- **Correlations** with within-snapshot O/H: |ρ| ≤ 0.18 for every property;
+  the strongest is distance (ρ = −0.12 at 4×, −0.18 at 8×), outer clouds
+  slightly metal-poorer.
+- Extreme values entered with the new runs: Z down to ~0 and 12+log(O/H) down
+  to 4.3 (pristine clouds at z ≈ 15 in g39), up to 1.6 Z⊙.
+
+### 5.5b Galaxy boundary check (2026-11-13)
+
+Cut: cloud distance < R_gal = min(2 r½,*, 0.15 R200c) (clumpiness paper);
+0.15 R200c where the host has no stars yet. At z < 6 the cap sets R_gal in
+most snapshots (≈ 3–10 kpc).
+
+| | 4× | 8× |
+|---|---|---|
+| clouds kept | 87–95% | 60–73% |
+| cloud SFR kept | 84–100% | 63–80% |
+| headline Δ, all clouds | +0.022 [−0.025, +0.083], 250 snaps | +0.035 [−0.075, +0.192], 132 |
+| headline Δ, inside R_gal | +0.026 [−0.021, +0.088], 236 snaps | +0.077 [−0.050, +0.194], 126 |
+
+- Removed clouds sit at median 0.25 R200c (~7 kpc) and are slightly
+  metal-poorer than their snapshot's other clouds (−0.023 vs +0.003 dex).
+- Other apertures shift by ≤ 0.02 dex at 4×, ≤ 0.02 dex at 8×, except the
+  headline at 8× (+0.04).
+- Per run, every median stays within ±0.11 dex; g33206 remains the only
+  negative run (−0.046 at 4×, −0.011 at 8×).
+- The cut removes most cases where clouds out-form the central (g578: 2.7× →
+  0.9×). Two remain, both mergers inside R_gal: g1163 snap 51 (2.5×; group
+  10.5 vs central 3.3 M⊙/yr) and g205 snap 99 (1.08×).
+- **Conclusion: the cut does not change the result (no −0.1 dex dilution),
+  but it matters at 8×. Adopted as the notebook default.**
+
+### 5.5c Sensitivity of the headline (2026-11-13, notebook §9)
+
+One choice changed at a time; headline = median over snapshots of SF clumps −
+host SF gas outside clumps.
+
+| variant | 4× | 8× |
+|---|---|---|
+| default (inside R_gal, N ≥ 30, SFR-weighted clump O/H, median) | +0.026 | +0.077 |
+| no galaxy boundary | +0.022 | +0.035 |
+| N ≥ 50 / N ≥ 100 | +0.016 / +0.002 | +0.071 / +0.060 |
+| ≥ 3 / ≥ 10 SF clumps per snapshot | +0.021 / +0.016 | +0.088 / +0.082 |
+| all clumps combined, SFR-weighted | −0.001 | +0.068 |
+| mass-weighted clump O/H | +0.048 | +0.076 |
+| SF = SFR_yso > 0, mass-weighted O/H | +0.051 | +0.066 |
+| outside-clumps host up to 70% / 97% clump share | +0.038 / +0.025 | +0.071 / +0.077 |
+
+The **median-clump** headline is robust: −0.001 to +0.051 (4×), +0.035 to
++0.088 (8×); 1–4% of snapshots at ≤ −0.1 dex (14% for the SFR-weighted
+combination). Snapshots where clouds out-form the central are already
+excluded by the 90% subtraction limit.
+
+### 5.5d Brightest clumps in massive hosts are diluted (preliminary)
+
+Following up the low "combined" row (notebook §9b):
+
+- Within a galaxy and snapshot, the most star-forming clumps are the
+  metal-poorest — **only in massive hosts**. Spearman ρ(SFR, O/H relative to
+  the other clumps): g39 −0.29, g578 −0.22, g205 −0.17, g1163 −0.12; ~0 for
+  g5760, g10304 at both resolutions. Holds at fixed cloud gas mass (ρ = −0.33
+  in the top mass tercile); stronger in SFR-weighted than mass-weighted O/H,
+  so inside bright clouds the star-forming cells are less enriched than the
+  cloud gas on average. (The 8× runs show nothing because all four 8× targets
+  are low-mass, not because of resolution.)
+- **Brightest clump per snapshot vs host SF gas outside clumps**, ordered by
+  log M200c at z = 3: g39 (12.56) **−0.218 dex, 81% of snapshots ≤ −0.1**;
+  g205 (12.13) −0.031, 29%; g578 (11.84) +0.036, 5%; g1163 (11.42) +0.024;
+  lower-mass runs ≈ 0 to +0.1. Top-10% clumps: g39 −0.097, g205 −0.038.
+- This is the observational selection (bright clumps in massive galaxies) and
+  reaches the JWST-reported level in the most massive target. It rests mainly
+  on one galaxy.
+- **Robustness in g39** (notebook §10): holds at z = 3–4, the only epoch the
+  catalog covers well (−0.22 to −0.26 dex; 81–100% of snapshots ≤ −0.1; 3
+  snapshots at z > 8 give −0.07). Insensitive to the galaxy boundary (−0.18
+  inner half, −0.22 default, −0.21 none). In-situ, not a companion: brightest
+  clump at ~1.7 kpc (0.17 R_gal), other subhaloes ~5% of group SFR. It is a
+  **giant**: ~4.5×10⁷ M⊙ of gas, ~60× a typical cloud (JWST clump scale);
+  slightly higher O/Fe (9.8 vs 9.4).
+
 ### 5.5 Audit of the calculations (2026-11-13, `audit_checks.py`)
 
 | check | result |
@@ -220,6 +324,7 @@ z = 3.0–9.6.
 | `CenterPosition` units | physical kpc strongly favoured (above) |
 | host "outside clumps" subtraction | never negative where defined |
 | species sums, O enhancement | see §3 |
+| all 14 trees: snapshot grid and M200c/R200c | identical grid to g205 (|Δz| = 0); M200c/R200c consistent to 0.04% everywhere |
 
 Not a bug but worth knowing: at z < 4 the host's star-forming gas
 (Z ≈ 0.33–0.34 Z⊙ mass- or SFR-weighted) is *less* enriched than its gas
@@ -227,8 +332,7 @@ within r½ (0.42) or all its bound gas (0.39). The bound gas outside the
 star-forming phase is the more metal-rich, plausibly metal-loaded outflows.
 An emission-line host value would track the star-forming gas.
 
-Not checkable locally: the snapshot grid for runs other than g205 (assumed
-identical); exact meaning of the `HalfRad` aperture (TNG convention: within
+Not checkable locally: exact meaning of the `HalfRad` aperture (TNG convention: within
 the stellar half-mass radius).
 
 ### 5.6 Corrections (withdrawn statements)
@@ -266,6 +370,9 @@ Kept here so they are not repeated.
    complexes of hundreds of pc. A fair comparison may need clouds aggregated
    into complexes.
 
+**Analysis decisions**
+8. ~~Galaxy boundary?~~ Adopted: R_gal = min(2 r½,*, 0.15 R200c) (§5.5b).
+
 **Science**
 6. If THESAN-Zoom clumps are not diluted, is it because these galaxies have
    no settled disc and clouds condense from an already well-mixed turbulent
@@ -281,9 +388,19 @@ Kept here so they are not repeated.
 - [x] Catalog coverage: gaps are irregular, headline offset unaffected (§5.3).
 - [ ] Read the observational papers for the host definition and clump scale
       (questions 4–5); add them to `Thesan_Zoom_Clumps/`.
-- [ ] On ORCD: run `tz_tree_catalog.py` for the other targets and save
-      `<target>_z<zoom>_host_halo.csv` here; notebook §1b checks each one
-      automatically.
+- [x] On ORCD: host trees for all 13 targets → `host_trees/` (§9).
+- [x] Copy `host_trees/` to the laptop; extend the notebook to all three
+      resolutions and run §1b on every run (§5.5a).
+- [x] Galaxy boundary adopted (§5.5b); sensitivity check done (§5.5c).
+- [x] Robustness of the g39 bright-clump signal: redshift, boundary,
+      companion (§5.5d, notebook §10).
+- [ ] **Student tasks (notebook §11)**, with ground rules in the notebook:
+      1. What a brightest clump is, physically (g39, g205).
+      2. Halo mass or redshift: brightest-clump offset vs M200c at each
+         snapshot, and within z = 3–4.
+      3. Clump complexes at JWST scale (linking length 200 / 500 pc).
+- [ ] Why are the giant clumps metal-poor (inflow?) — needs snapshot data;
+      cell-level check on ORCD.
 - [ ] Clump complexes: link clouds within ~200–500 pc and repeat §3–5.
 - [ ] Same-target resolution comparison of clump metallicity scatter.
 - [ ] Fix the stellar-type detection in `tz_plot.py` (picks the empty type 2
@@ -324,8 +441,14 @@ papers in `Thesan_Zoom_Clumps/` (incl. the unpublished preprint),
 The rules name files individually, so a new catalog file, paper or `.pyc`
 must be added by hand. Checked 2026-11-13: no private file in any commit.
 
-Cloning the repo does not give a runnable notebook: the catalog and host CSV
-have to be copied in separately.
+Host trees for all 13 fiducial targets (4×: g10304, g1163, g205, g33206,
+g37591, g39, g5760, g578; 8×: g10304, g33206, g37591, g5760; 16×: g137030,
+g500531) were extracted on ORCD on 2026-11-13 into `host_trees/`. They are
+**ignored** (`*_host_halo.csv`, `*_host_halo.csv.units.txt`) and copied
+between ORCD and the laptop by hand (`scp`), not through git.
+
+Cloning the repo does not give a runnable notebook: the catalog and host
+trees have to be copied in separately.
 
 ---
 
@@ -354,3 +477,28 @@ have to be copied in separately.
   that particle type 4 holds stars only (no wind particles). Decided to
   settle catalog questions from the data; the coverage gaps turned out to be
   irregular (not starburst windows) and do not bias the headline offset.
+  Extracted host trees for all 13 targets on ORCD (`host_trees/`, kept out
+  of git). Per the tree script, g10304's target is not FoF group 0 in 170 of
+  189 snapshots (4×), and g37591 is a satellite in 13 (4×) / 14 (8×).
+- **2026-11-13 (cont.)** — Extended the notebook to all 14 host trees and all
+  three resolutions. Host trees moved to `host_trees/`; every script now finds
+  them via `tz_gmc.host_tree_path()`. Matching passes for all 12 runs at 4×
+  and 8×; the 16× catalog holds only neighbours' clouds. Found that clouds in
+  other galaxies of the same FoF group enter the sample (27–40% of clouds at
+  8×). Headline offset +0.02 (4×) / +0.04 (8×) dex: no −0.1 dex dilution in
+  any run's median. Audit extended to every tree (snapshot grid identical,
+  units consistent).
+- **2026-11-13 (cont.)** — Galaxy boundary check (§5.5b): R_gal cut removes
+  5–13% of clouds at 4× and 27–40% at 8×; headline shifts +0.004 (4×) and
+  +0.04 dex (8×); conclusion unchanged.
+- **2026-11-13 (cont.)** — Adopted the galaxy boundary as the default sample.
+  Sensitivity check (§5.5c): the median-clump headline is robust to every
+  choice tested. Following up the one low variant found that the brightest
+  clumps are the metal-poorest in massive hosts; in g39 the brightest clump
+  sits −0.22 dex below the host's SF gas (81% of snapshots ≤ −0.1 dex)
+  (§5.5d, preliminary).
+- **2026-11-13 (cont.)** — Robustness of the g39 signal (notebook §10): holds
+  at z = 3–4, independent of the galaxy boundary, in-situ; the brightest
+  clumps are giant (~4.5×10⁷ M⊙). Added notebook §11 with three tasks for a
+  student (what the giant clumps are; halo mass vs redshift; clump complexes),
+  each with goal, steps, checks and an empty scaffold cell.

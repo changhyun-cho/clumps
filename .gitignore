@@ -36,3 +36,7 @@ Thesan_Zoom_Clumps/staf1677.pdf
 Thesan_Zoom_Clumps/Thesan_Zoom__Clumpiness.pdf
 
 .ipynb_checkpoints/
+
+# host trees extracted on ORCD (derived from unreleased THESAN-Zoom data)
+*_host_halo.csv
+*_host_halo.csv.units.txt

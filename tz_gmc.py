@@ -54,7 +54,18 @@ import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CATDIR = os.path.join(HERE, "gmc_catalog")
-ZMAP_CSV = os.path.join(HERE, "g205_z4_host_halo.csv")
+HOST_TREE_DIR = os.path.join(HERE, "host_trees")
+
+
+def host_tree_path(tag):
+    """Path of a host tree, '<target>_z<zoom>_host_halo.csv' (tag 'g205_z4' or the
+    full file name), looked up in host_trees/ first and then the repo root."""
+    name = tag if tag.endswith(".csv") else "%s_host_halo.csv" % tag
+    for d in (HOST_TREE_DIR, HERE):
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError("%s not found in %s or %s" % (name, HOST_TREE_DIR, HERE))
 
 ZSUN = 0.0127                     # Asplund+2009, as used by the Illustris/THESAN model
 METALS = ["C", "N", "O", "Ne", "Mg", "Si", "Fe"]
@@ -76,10 +87,10 @@ FILES = {
 }
 
 
-def snapshot_redshifts(path=ZMAP_CSV):
+def snapshot_redshifts(path=None):
     """snap -> z. THESAN-ZOOM writes 189 snapshots from z=16 to z=3 on a common
     time grid, so the map taken from the g205 tree applies to every run."""
-    t = pd.read_csv(path, usecols=["snap", "Redshift"])
+    t = pd.read_csv(path or host_tree_path("g205_z4"), usecols=["snap", "Redshift"])
     return dict(zip(t["snap"].astype(int), t["Redshift"].astype(float)))
 
 

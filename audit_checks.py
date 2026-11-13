@@ -32,7 +32,7 @@ def section(t):
     print("\n" + "=" * 92 + "\n" + t + "\n" + "=" * 92)
 
 
-tree = pd.read_csv("g205_z4_host_halo.csv")
+tree = pd.read_csv(tz_gmc.host_tree_path("g205_z4"))
 tree["snap"] = tree["snap"].astype(int)
 tree = tree.set_index("snap")
 
@@ -163,3 +163,22 @@ xo = (hs["Sub_SubhaloSFR"] * hs["Sub_SubhaloGasMetalFractionsSfrWeighted_4"] - p
 okm = (rest > 0.1 * hs["Sub_SubhaloSFR"])
 print("  snapshots with clumps < 90%% of host SFR: %d;  of those, residual O fraction <= 0: %d   %s"
       % (okm.sum(), (xo[okm] <= 0).sum(), verdict((xo[okm] <= 0).sum() == 0)))
+
+# ------------------------------------------------------------------ 8
+section("8. Every host tree: same snapshot grid, consistent units")
+import glob
+import os
+ref = tree["Redshift"]
+for p in sorted(glob.glob(os.path.join(tz_gmc.HOST_TREE_DIR, "*_host_halo.csv"))):
+    t = pd.read_csv(p)
+    t = t.set_index(t["snap"].astype(int))
+    common = t.index.intersection(ref.index)
+    dz = np.abs(t.loc[common, "Redshift"] - ref.loc[common]).max()
+    z = t["Redshift"]
+    rc = 3 * (H0 * np.sqrt(OM * (1 + z) ** 3 + OL) / 1e3) ** 2 / (8 * np.pi * G_KPC)
+    m = t["phys_Group_Group_M_Crit200_Msun"] > 0
+    r = (t["phys_Group_Group_M_Crit200_Msun"] / (200 * rc * 4 / 3 * np.pi * t["phys_Group_Group_R_Crit200_kpc"] ** 3))[m]
+    missing = sorted(set(range(189)) - set(t.index))
+    ok = dz < 1e-9 and abs(r - 1).max() < 0.01
+    print("  %-14s snaps %3d  missing %-6s max|dz| %.1e  M200/R200 %.4f-%.4f   %s"
+          % (os.path.basename(p).replace("_host_halo.csv", ""), len(t), missing or "-", dz, r.min(), r.max(), verdict(ok)))
